@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>图书管理</title>
+</head>
+<body>
+	
+
+ <div><a href="./out">注销</a></div>
+
+
+<br>
+<a href="./addbook">增加</a>
+<table border="1">
+  <tr>
+    <th>ID</th>
+    <th>拥有人</th>
+    <th>书名</th>
+    <td>操作</td>
+  </tr>
+
+
+{{range .Data}}
+ <tr>
+    <td>{{.Bid}}</td>
+    <td>{{.Username}}</td>
+    <td>{{.Bname}}</td>
+    <td> <a href="./alter?bid={{.Bid}}">修改</a>  <a href="./del?bid={{.Bid}}">删除</a></td>
+  </tr>
+{{end}}
+
+ 
+</table>
+<script type="text/javascript">
+  
+  
+
+</script>
+</body>
+</html>
