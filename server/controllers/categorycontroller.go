@@ -56,11 +56,6 @@ func (this *CategoryController) Add_Json() {
 }
 
 func (this *CategoryController) Mod_Json() {
-	//检查输入
-	// var data struct {
-	// 	CategoryId int
-	// }
-	// this.CheckPost(&data)
 
 	category := Category{}
 	this.CheckPost(&category)
