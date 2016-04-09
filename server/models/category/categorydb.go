@@ -26,7 +26,7 @@ func (this *CategoryDbModel) Search(where Category, limit CommonPage) Categorys 
 	}
 
 	if where.Remark != "" {
-		db = db.And("remark = ?", where.Remark)
+		db = db.And("remark like ?", "%"+where.Remark+"%")
 	}
 
 	data := []Category{}
@@ -40,7 +40,7 @@ func (this *CategoryDbModel) Search(where Category, limit CommonPage) Categorys 
 	}
 
 	if where.Remark != "" {
-		db = db.And("remark = ?", where.Remark)
+		db = db.And("remark like ?", "%"+where.Remark+"%")
 	}
 
 	count, err := db.And("userId = ?", where.UserId).Count(&Category{})

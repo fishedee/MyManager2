@@ -26,7 +26,7 @@ func (this *CardDbModel) Search(where Card, limit CommonPage) Cards {
 	}
 
 	if where.Remark != "" {
-		db = db.And("remark = ?", where.Remark)
+		db = db.And("remark like ?", "%"+where.Remark+"%")
 	}
 
 	data := []Card{}
@@ -40,7 +40,7 @@ func (this *CardDbModel) Search(where Card, limit CommonPage) Cards {
 	}
 
 	if where.Remark != "" {
-		db = db.And("remark = ?", where.Remark)
+		db = db.And("remark like ?", "%"+where.Remark+"%")
 	}
 
 	count, err := db.And("userId = ?", where.UserId).Count(&Card{})
