@@ -78,11 +78,13 @@ func (this *UserDbModel) Get(id int) User {
 
 	return users[0]
 }
-func (this *UserDbModel) Add(user User) {
-	_, err := this.DB.Insert(user)
+func (this *UserDbModel) Add(user User) int {
+	_, err := this.DB.Insert(&user)
 	if err != nil {
 		panic(err)
 	}
+
+	return user.UserId
 }
 
 func (this *UserDbModel) Mod(id int, user User) {

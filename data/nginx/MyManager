@@ -13,6 +13,6 @@ server {
 	}
 
 	location / {
-		proxy_pass http://localhost:8180;
+		proxy_pass http://localhost:7180;
 	}
 }
