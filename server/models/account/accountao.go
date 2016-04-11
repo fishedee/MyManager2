@@ -4,7 +4,9 @@ import (
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 	// "crypto/sha1"
-	// "fmt"
+	"fmt"
+	"strconv"
+	"time"
 	// "io"
 )
 
@@ -70,4 +72,30 @@ func (this *AccountAoModel) Del(userId, accountId int) {
 	this.Get(userId, accountId)
 
 	this.AccountDb.Del(accountId)
+}
+
+func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic {
+
+	weekState := this.AccountDb.AccountJoinCard(userId)
+	accountEnums := accountEnum.Names()
+	weekStateLangut := len(weekState)
+
+	for i := 0; i < weekStateLangut; i++ {
+
+		t, err := time.Parse("2006-01-02 15:05:04", weekState[i].CreateTime)
+		if err != nil {
+			panic(err)
+		}
+
+		year, week := t.ISOWeek()
+		weekState[i].Year = year
+		weekState[i].Week = week
+
+		weekState[i].TypeName = accountEnums[strconv.Itoa(weekState[i].Type)]
+
+	}
+
+	fmt.Printf("%+v", weekState)
+	return weekState
+
 }

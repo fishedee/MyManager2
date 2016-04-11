@@ -17,3 +17,16 @@ type Accounts struct {
 	Count int
 	Data  []Account
 }
+
+type WeekTypeStatistic struct {
+	CardId     int
+	CardName   string
+	Money      int
+	Name       string
+	Type       int
+	TypeName   string
+	Week       int
+	Year       int
+	CreateTime string
+	ModifyTime string
+}

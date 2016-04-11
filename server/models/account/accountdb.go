@@ -14,11 +14,8 @@ func (this *AccountDbModel) Search(where Account, limit CommonPage) Accounts {
 	db := this.DB.NewSession()
 	defer db.Close()
 
-	if limit.PageSize == 0 && limit.PageIndex == 0 {
-		return Accounts{
-			Count: 0,
-			Data:  []Account{},
-		}
+	if limit.PageSize == 0 {
+		limit.PageSize = 50
 	}
 
 	if where.Name != "" {
@@ -107,4 +104,14 @@ func (this *AccountDbModel) Del(accountId int) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func (this *AccountDbModel) AccountJoinCard(userId int) []WeekTypeStatistic {
+	var data []WeekTypeStatistic
+	err := this.DB.Sql("select ac.cardId,card.name as cardName,ac.money,ac.name,ac.type,ac.CreateTime,ac.ModifyTime  from t_account as ac inner join t_card card  on ac.cardId=card.cardId where ac.userId=?", userId).Find(&data)
+
+	if err != nil {
+		panic(err)
+	}
+	return data
 }

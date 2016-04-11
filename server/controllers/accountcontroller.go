@@ -5,6 +5,7 @@ import (
 	. "mymanager/models/account"
 	. "mymanager/models/common"
 	. "mymanager/models/user"
+	// "time"
 )
 
 type AccountController struct {
@@ -79,4 +80,14 @@ func (this *AccountController) Del_Json() {
 
 	//业务逻辑
 	this.AccountAo.Del(user.UserId, data.AccountId)
+}
+
+func (this *AccountController) GetWeekTypeStatistic_Json() interface{} {
+
+	//检查权限
+	user := this.UserLoginAo.CheckMustLogin()
+
+	//业务逻辑
+	return this.AccountAo.GetWeekTypeStatistic(user.UserId)
+
 }
