@@ -14,11 +14,8 @@ func (this *CardDbModel) Search(where Card, limit CommonPage) Cards {
 	db := this.DB.NewSession()
 	defer db.Close()
 
-	if limit.PageSize == 0 && limit.PageIndex == 0 {
-		return Cards{
-			Count: 0,
-			Data:  []Card{},
-		}
+	if limit.PageSize == 0 {
+		limit.PageSize = 50
 	}
 
 	if where.Name != "" {

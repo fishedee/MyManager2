@@ -4,7 +4,7 @@ import (
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 	// "crypto/sha1"
-	"fmt"
+	// "fmt"
 	// "io"
 )
 
@@ -13,17 +13,19 @@ type CardAoModel struct {
 	CardDb CardDbModel
 }
 
-func (this *CardAoModel) Search(userId int, data Card, pageInfo CommonPage) Cards {
+func (this *CardAoModel) Search(userId int, where Card, pageInfo CommonPage) Cards {
 
-	wheres := Card{
-		UserId: userId,
-		Name:   data.Name,
-		Remark: data.Remark,
-	}
+	// wheres := Card{
+	// 	UserId: userId,
+	// 	Name:   data.Name,
+	// 	Remark: data.Remark,
+	// }
 
-	fmt.Printf("%+v", wheres)
+	where.UserId = userId
 
-	return this.CardDb.Search(wheres, pageInfo)
+	// fmt.Printf("%+v", wheres)
+
+	return this.CardDb.Search(where, pageInfo)
 
 }
 
@@ -37,16 +39,17 @@ func (this *CardAoModel) Get(userId, cardId int) Card {
 
 func (this *CardAoModel) Add(userId int, card Card) {
 
-	cards := Card{
-		UserId: userId,
-		Name:   card.Name,
-		Bank:   card.Bank,
-		Card:   card.Card,
-		Money:  card.Money,
-		Remark: card.Remark,
-	}
+	// cards := Card{
+	// 	UserId: userId,
+	// 	Name:   card.Name,
+	// 	Bank:   card.Bank,
+	// 	Card:   card.Card,
+	// 	Money:  card.Money,
+	// 	Remark: card.Remark,
+	// }
+	card.UserId = userId
 
-	this.CardDb.Add(cards)
+	this.CardDb.Add(card)
 }
 
 func (this *CardAoModel) Mod(userId int, card Card) {

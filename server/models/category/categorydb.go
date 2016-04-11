@@ -14,11 +14,8 @@ func (this *CategoryDbModel) Search(where Category, limit CommonPage) Categorys 
 	db := this.DB.NewSession()
 	defer db.Close()
 
-	if limit.PageSize == 0 && limit.PageIndex == 0 {
-		return Categorys{
-			Count: 0,
-			Data:  []Category{},
-		}
+	if limit.PageSize == 0 {
+		limit.PageSize = 50
 	}
 
 	if where.Name != "" {
