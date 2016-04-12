@@ -91,3 +91,16 @@ func (this *AccountController) GetWeekTypeStatistic_Json() interface{} {
 	return this.AccountAo.GetWeekTypeStatistic(user.UserId)
 
 }
+
+func (this *AccountController) GetWeekDetailTypeStatistic_Json() interface{} {
+
+	//检查输入
+	var data WeekTypeStatistic
+	this.CheckGet(&data)
+
+	//检查权限
+	user := this.UserLoginAo.CheckMustLogin()
+
+	//业务逻辑
+	return this.AccountAo.GetWeekDetailTypeStatistic(user.UserId, data)
+}

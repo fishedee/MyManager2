@@ -1,6 +1,7 @@
 package account
 
 import (
+	// "fmt"
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 	"strconv"
@@ -113,5 +114,16 @@ func (this *AccountDbModel) AccountJoinCard(userId int) []WeekTypeStatistic {
 	if err != nil {
 		panic(err)
 	}
+	return data
+}
+func (this *AccountDbModel) TimerangeOfData(userId int, thisType int, startTime string, endTime string) []WeekDetailTypeStatistic {
+	var data []WeekDetailTypeStatistic
+	// err := this.DB.Sql("select * from t_account where userId=? AND type=? AND createTime>=? AND createTime<=?;", userId, thisType, startTime, endTime).Find(&data)
+	err := this.DB.Sql("select ca.categoryId,ca.name as categoryName,ac.money,ac.createTime from t_account as ac inner join t_category as ca ON ac.categoryId=ca.categoryId where ac.userId=? AND ac.type=? AND ac.createTime>=? AND ac.createTime<=?", userId, thisType, startTime, endTime).Find(&data)
+
+	if err != nil {
+		panic(err)
+	}
+
 	return data
 }
