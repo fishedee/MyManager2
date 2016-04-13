@@ -11,7 +11,7 @@ var accountEnum struct {
 	TRANSFER_INCOME    int `enum:"3,转账收入"`
 	TRANSFER_SPENDING  int `enum:"4,转账支出"`
 	ACCOUNT_RECEIVABLE int `enum:"5,借还账收入"`
-	ACCOUNTS_PAYABLE   int `enum:"5,借还账支出"`
+	ACCOUNTS_PAYABLE   int `enum:"6,借还账支出"`
 }
 
 func init() {
