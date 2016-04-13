@@ -104,3 +104,25 @@ func (this *AccountController) GetWeekDetailTypeStatistic_Json() interface{} {
 	//业务逻辑
 	return this.AccountAo.GetWeekDetailTypeStatistic(user.UserId, data)
 }
+
+func (this *AccountController) GetWeekCardStatistic_Json() interface{} {
+
+	//检查权限
+	user := this.UserLoginAo.CheckMustLogin()
+
+	//业务逻辑
+	return this.AccountAo.GetWeekCardStatistic(user.UserId)
+}
+
+func (this *AccountController) GetWeekDetailCardStatistic_Json() interface{} {
+
+	//检查输入
+	var data WeekCardStatistic
+	this.CheckGet(&data)
+
+	//检查权限
+	user := this.UserLoginAo.CheckMustLogin()
+
+	//业务逻辑
+	return this.AccountAo.GetWeekDetailCardStatistic(user.UserId, data)
+}

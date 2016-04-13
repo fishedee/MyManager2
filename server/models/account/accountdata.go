@@ -19,16 +19,16 @@ type Accounts struct {
 }
 
 type WeekTypeStatistic struct {
-	CardId   int
-	CardName string
-	Money    int
-	Name     string
-	Type     int
-	TypeName string
-	Week     int
-	Year     int
-	// CreateTime string
-	// ModifyTime string
+	CardId     int
+	CardName   string
+	Money      int
+	Name       string
+	Type       int
+	TypeName   string
+	Week       int
+	Year       int
+	CreateTime string
+	ModifyTime string
 }
 
 type WeekDetailTypeStatistic struct {
@@ -44,4 +44,19 @@ type WeekDetailTypeStatistic struct {
 	ModifyTime   string
 	Precent      string
 	TypeName     string
+}
+
+type WeekCardStatistic struct {
+	CardId       int
+	CardName     string
+	CardMoney    int
+	AccountMoney int
+	Money        int
+	Name         string
+	Type         int
+	TypeName     string
+	Week         int
+	Year         int
+	CreateTime   string
+	ModifyTime   string
 }

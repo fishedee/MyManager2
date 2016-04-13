@@ -156,6 +156,7 @@ func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic
 	accountEnums := accountEnum.Names()
 	accountData := accountSearchData.Data
 
+	//分类摆放 year/week/type
 	classify := map[int]map[int]map[int][]WeekTypeStatistic{}
 
 	accountLangut := len(accountData)
@@ -173,13 +174,13 @@ func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic
 		year, week := t.ISOWeek()
 
 		//初始化map
-		_, ok := classify[year]
-		if ok != true {
+		_, isExist := classify[year]
+		if isExist != true {
 			classify[year] = map[int]map[int][]WeekTypeStatistic{}
 		}
 
-		_, oks := classify[year][week]
-		if oks != true {
+		_, isExists := classify[year][week]
+		if isExists != true {
 			classify[year][week] = map[int][]WeekTypeStatistic{}
 		}
 
@@ -249,7 +250,7 @@ func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekType
 	fmt.Println(startTimeString)
 	fmt.Println(endTimeString)
 
-	timeRangeData := this.AccountDb.TimerangeOfData(userId, data.Type, startTimeString, endTimeString)
+	timeRangeData := this.AccountDb.AccountJoinCategory(userId, data.Type, startTimeString, endTimeString)
 
 	//分类摆放
 	classify := map[int][]WeekDetailTypeStatistic{}
@@ -257,6 +258,7 @@ func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekType
 	//统计总价格
 	var totalPrice int
 
+	//顺便按CategoryId分类
 	for _, v := range timeRangeData {
 		totalPrice += v.Money
 		classify[v.CategoryId] = append(classify[v.CategoryId], v)
@@ -303,6 +305,197 @@ func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekType
 	return result
 
 }
+
+func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekCardStatistic {
+	accountJoinCard := this.AccountDb.GetWeekCardStatistic(userId)
+	fmt.Printf("%+v", accountJoinCard)
+	//分类摆放 year/week/cardId/type
+	classify := map[int]map[int]map[int]map[int][]WeekCardStatistic{}
+
+	accountJoinCardLangut := len(accountJoinCard)
+
+	for i := 0; i < accountJoinCardLangut; i++ {
+
+		singleData := accountJoinCard[i]
+		singleCardId := singleData.CardId
+		singleType := singleData.Type
+
+		//获取多小年的第几周
+		t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
+		if err != nil {
+			panic(err)
+		}
+
+		year, week := t.ISOWeek()
+
+		//初始化map
+		_, isExist := classify[year]
+		if isExist != true {
+			classify[year] = map[int]map[int]map[int][]WeekCardStatistic{}
+		}
+
+		_, isExists := classify[year][week]
+		if isExists != true {
+			classify[year][week] = map[int]map[int][]WeekCardStatistic{}
+		}
+
+		_, isExistss := classify[year][week][singleCardId]
+		if isExistss != true {
+			classify[year][week][singleCardId] = map[int][]WeekCardStatistic{}
+		}
+
+		//按时间和类型组合
+		classify[year][week][singleCardId][singleType] = append(classify[year][week][singleCardId][singleType], WeekCardStatistic{
+			CardId:       singleData.CardId,
+			CardName:     singleData.CardName,
+			CardMoney:    singleData.CardMoney,
+			AccountMoney: singleData.AccountMoney,
+			Type:         singleData.Type,
+			Week:         week,
+			Year:         year,
+		})
+	}
+	fmt.Println("\n")
+	fmt.Printf("%+v", classify)
+
+	var result []WeekCardStatistic
+
+	for _, weeks := range classify {
+		for _, cardId := range weeks {
+			for _, Types := range cardId {
+
+				var tempMoney int
+				var tempType int
+
+				for typeNum, Type := range Types {
+
+					for _, single := range Type {
+						// fmt.Println("\nyear")
+						// fmt.Printf("%+v", year)
+						// fmt.Println("\nweek")
+						// fmt.Printf("%+v", week)
+						// fmt.Println("\nTypeNum")
+						// fmt.Printf("%+v", TypeNum)
+						// fmt.Println("\nsingle")
+						// fmt.Printf("%+v", single)
+						// fmt.Println("\n")
+
+						// tempMoney += single.Money
+						fmt.Println("\n")
+						fmt.Printf("%+v", single)
+
+						switch single.Type {
+						case 1, 3, 5:
+							tempMoney += single.AccountMoney
+						case 2, 4, 6:
+							tempMoney -= single.AccountMoney
+						default:
+							panic(errors.New("不存在该类型"))
+						}
+
+						tempType = typeNum
+					}
+					fmt.Println("tempMoney", tempMoney)
+
+				}
+				fmt.Println("\n")
+				fmt.Println("Types")
+				fmt.Printf("%+v", Types)
+				result = append(result, WeekCardStatistic{
+					Money:    Types[tempType][0].CardMoney + tempMoney,
+					Name:     strconv.Itoa(Types[tempType][0].Year) + "年" + strconv.Itoa(Types[tempType][0].Week) + "周",
+					CardId:   Types[tempType][0].CardId,
+					CardName: Types[tempType][0].CardName,
+					Week:     Types[tempType][0].Week,
+					Year:     Types[tempType][0].Year,
+				})
+			}
+
+		}
+	}
+
+	fmt.Printf("%+v", result)
+
+	return result
+}
+
+func (this *AccountAoModel) GetWeekDetailCardStatistic(userId int, data WeekCardStatistic) []WeekDetailTypeStatistic {
+
+	accountEnums := accountEnum.Names()
+
+	//获取那个星期的时间范围
+	t := time.Now()
+	timeLocation := t.Location()
+	thisWeekStartTime := firstDayOfISOWeek(data.Year, data.Week, timeLocation)
+	thisWeekEndTime := thisWeekStartTime.AddDate(0, 0, 7)
+
+	// startMouth := string(thisWeekStartTime.Month())
+	startTimeString := strconv.Itoa(thisWeekStartTime.Year()) + "-" + mouthNum(thisWeekStartTime.Month().String()) + "-" + strconv.Itoa(thisWeekStartTime.Day())
+	endTimeString := strconv.Itoa(thisWeekEndTime.Year()) + "-" + mouthNum(thisWeekEndTime.Month().String()) + "-" + strconv.Itoa(thisWeekEndTime.Day())
+	fmt.Println(startTimeString)
+	fmt.Println(endTimeString)
+
+	timeRangeData := this.AccountDb.GetWeekDetailCardStatistic(userId, data.CardId, startTimeString, endTimeString)
+	fmt.Printf("%+v", timeRangeData)
+
+	//分类摆放
+	classify := map[int][]WeekDetailTypeStatistic{}
+
+	//统计总价格
+	var totalPrice int
+
+	//顺便按CategoryId分类
+	for _, v := range timeRangeData {
+		fmt.Println("\n")
+		totalPrice += v.Money
+		fmt.Printf("%+v", v)
+		classify[v.Type] = append(classify[v.Type], v)
+	}
+
+	var result []WeekDetailTypeStatistic
+
+	totalPriceFloat, err := strconv.ParseFloat(strconv.Itoa(totalPrice), 32)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for Type, categoryData := range classify {
+		var categoryMoney int
+		for _, singleData := range categoryData {
+			categoryMoney += singleData.Money
+		}
+
+		categoryMoneyFloat, err := strconv.ParseFloat(strconv.Itoa(categoryMoney), 32)
+
+		if err != nil {
+			panic(err)
+		}
+
+		// fmt.Println()
+
+		categoryMoneyScale := categoryMoneyFloat / totalPriceFloat * 100
+
+		categoryMoneyScaleString := fmt.Sprintf("%.2f", categoryMoneyScale)
+
+		fmt.Println(categoryMoneyScaleString)
+
+		result = append(result, WeekDetailTypeStatistic{
+			Type:     Type,
+			TypeName: accountEnums[strconv.Itoa(Type)],
+			// CategoryName: categoryData[0].CategoryName,
+			Money:   categoryMoney,
+			Precent: categoryMoneyScaleString,
+		})
+	}
+
+	fmt.Printf("%+v", result)
+
+	return result
+	// return 0
+
+}
+
 func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {
 	date := time.Date(year, 0, 0, 0, 0, 0, 0, timezone)
 	isoYear, isoWeek := date.ISOWeek()
