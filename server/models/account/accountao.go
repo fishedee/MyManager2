@@ -19,18 +19,7 @@ type AccountAoModel struct {
 
 func (this *AccountAoModel) Search(userId int, where Account, pageInfo CommonPage) Accounts {
 
-	// wheres := Account{
-	// 	UserId:     userId,
-	// 	Name:       data.Name,
-	// 	Remark:     data.Remark,
-	// 	CategoryId: data.CategoryId,
-	// 	CardId:     data.CardId,
-	// 	Type:       data.Type,
-	// }
-
 	where.UserId = userId
-
-	// fmt.Printf("%+v", wheres)
 
 	return this.AccountDb.Search(where, pageInfo)
 
@@ -45,16 +34,6 @@ func (this *AccountAoModel) Get(userId, accountId int) Account {
 }
 
 func (this *AccountAoModel) Add(userId int, account Account) {
-
-	// accounts := Account{
-	// 	UserId:     userId,
-	// 	Name:       account.Name,
-	// 	Money:      account.Money,
-	// 	Remark:     account.Remark,
-	// 	CategoryId: account.CategoryId,
-	// 	CardId:     account.CardId,
-	// 	Type:       account.Type,
-	// }
 
 	account.UserId = userId
 
@@ -75,79 +54,6 @@ func (this *AccountAoModel) Del(userId, accountId int) {
 
 	this.AccountDb.Del(accountId)
 }
-
-// func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic {
-
-// 	// var classify map[int]map[int][]WeekTypeStatistic
-// 	classify := map[int]map[int]map[int][]WeekTypeStatistic{}
-// 	weekState := this.AccountDb.AccountJoinCard(userId)
-// 	accountEnums := accountEnum.Names()
-// 	weekStateLangut := len(weekState)
-
-// 	for i := 0; i < weekStateLangut; i++ {
-
-// 		t, err := time.Parse("2006-01-02 15:05:04", weekState[i].CreateTime)
-// 		if err != nil {
-// 			panic(err)
-// 		}
-
-// 		year, week := t.ISOWeek()
-// 		weekState[i].Name = strconv.Itoa(year) + "年" + strconv.Itoa(week) + "周"
-// 		weekState[i].Year = year
-// 		weekState[i].Week = week
-
-// 		weekState[i].TypeName = accountEnums[strconv.Itoa(weekState[i].Type)]
-
-// 		// fmt.Printf("%+v", weekState[i])
-// 		// fmt.Printf("%+v", classify[year][week])
-
-// 		// fmt.Println("\nstart\n")
-
-// 		_, ok := classify[year]
-// 		if ok != true {
-// 			classify[year] = map[int]map[int][]WeekTypeStatistic{}
-// 		}
-
-// 		_, oks := classify[year][week]
-// 		if oks != true {
-// 			classify[year][week] = map[int][]WeekTypeStatistic{}
-// 		}
-
-// 		theType := weekState[i].Type
-// 		classify[year][week][theType] = append(classify[year][week][theType], weekState[i])
-
-// 		// fmt.Println(append(classify[year][week], weekState[i]))
-
-// 		// fmt.Println("\nend\n")
-
-// 	}
-
-// 	// this.Log.Debug(classify)
-
-// 	// fmt.Printf("%+v", classify)
-
-// 	for year, weeks := range classify {
-// 		for week, Types := range weeks {
-// 			for TypeNum, Type := range Types {
-// 				for _, single := range Type {
-// 					fmt.Println("\nyear\n")
-// 					fmt.Printf("%+v", year)
-// 					fmt.Println("\nweek\n")
-// 					fmt.Printf("%+v", week)
-// 					fmt.Println("\nTypeNum\n")
-// 					fmt.Printf("%+v", TypeNum)
-// 					fmt.Println("\nsingle\n")
-// 					fmt.Printf("%+v", single)
-// 				}
-
-// 			}
-
-// 		}
-// 	}
-
-// 	return weekState
-
-// }
 
 func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic {
 	var where Account
@@ -244,9 +150,9 @@ func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekType
 	thisWeekStartTime := firstDayOfISOWeek(data.Year, data.Week, timeLocation)
 	thisWeekEndTime := thisWeekStartTime.AddDate(0, 0, 7)
 
-	// startMouth := string(thisWeekStartTime.Month())
-	startTimeString := strconv.Itoa(thisWeekStartTime.Year()) + "-" + mouthNum(thisWeekStartTime.Month().String()) + "-" + strconv.Itoa(thisWeekStartTime.Day())
-	endTimeString := strconv.Itoa(thisWeekEndTime.Year()) + "-" + mouthNum(thisWeekEndTime.Month().String()) + "-" + strconv.Itoa(thisWeekEndTime.Day())
+	layout := "2006-01-02"
+	startTimeString := thisWeekStartTime.Format(layout)
+	endTimeString := thisWeekEndTime.Format(layout)
 	fmt.Println(startTimeString)
 	fmt.Println(endTimeString)
 
@@ -430,8 +336,9 @@ func (this *AccountAoModel) GetWeekDetailCardStatistic(userId int, data WeekCard
 	thisWeekEndTime := thisWeekStartTime.AddDate(0, 0, 7)
 
 	// startMouth := string(thisWeekStartTime.Month())
-	startTimeString := strconv.Itoa(thisWeekStartTime.Year()) + "-" + mouthNum(thisWeekStartTime.Month().String()) + "-" + strconv.Itoa(thisWeekStartTime.Day())
-	endTimeString := strconv.Itoa(thisWeekEndTime.Year()) + "-" + mouthNum(thisWeekEndTime.Month().String()) + "-" + strconv.Itoa(thisWeekEndTime.Day())
+	layout := "2006-01-02"
+	startTimeString := thisWeekStartTime.Format(layout)
+	endTimeString := thisWeekEndTime.Format(layout)
 	fmt.Println(startTimeString)
 	fmt.Println(endTimeString)
 
@@ -519,35 +426,4 @@ func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {
 	}
 
 	return date
-}
-
-func mouthNum(mouth string) string {
-	switch mouth {
-	case "January":
-		return "01"
-	case "February":
-		return "02"
-	case "March":
-		return "03"
-	case "April":
-		return "04"
-	case "May":
-		return "05"
-	case "June":
-		return "06"
-	case "July":
-		return "07"
-	case "August":
-		return "08"
-	case "September":
-		return "09"
-	case "October":
-		return "10"
-	case "November":
-		return "11"
-	case "December":
-		return "12"
-	default:
-		panic(errors.New("没有这个月份"))
-	}
 }
