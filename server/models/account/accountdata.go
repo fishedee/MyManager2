@@ -18,7 +18,7 @@ type Accounts struct {
 	Data  []Account
 }
 
-type WeekTypeStatistic struct {
+type WeekStatistic struct {
 	CardId     int
 	CardName   string
 	Money      int
@@ -31,32 +31,11 @@ type WeekTypeStatistic struct {
 	ModifyTime string
 }
 
-type WeekDetailTypeStatistic struct {
-	AccountId    int
-	UserId       int
-	Name         string
-	Money        int
+type WeekDetailStatistic struct {
 	CategoryId   int
 	CategoryName string
-	CardId       int
 	Type         int
-	CreateTime   string
-	ModifyTime   string
-	Precent      string
 	TypeName     string
-}
-
-type WeekCardStatistic struct {
-	CardId       int
-	CardName     string
-	CardMoney    int
-	AccountMoney int
 	Money        int
-	Name         string
-	Type         int
-	TypeName     string
-	Week         int
-	Year         int
-	CreateTime   string
-	ModifyTime   string
+	Precent      string
 }

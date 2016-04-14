@@ -4,7 +4,7 @@ import (
 	. "github.com/fishedee/language"
 )
 
-var accountEnum struct {
+var AccountTypeEnum struct {
 	EnumStruct
 	INCOME             int `enum:"1,收入"`
 	SPENDING           int `enum:"2,支出"`
@@ -15,5 +15,5 @@ var accountEnum struct {
 }
 
 func init() {
-	InitEnumStruct(&accountEnum)
+	InitEnumStruct(&AccountTypeEnum)
 }

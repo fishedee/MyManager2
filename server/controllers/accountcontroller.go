@@ -95,7 +95,7 @@ func (this *AccountController) GetWeekTypeStatistic_Json() interface{} {
 func (this *AccountController) GetWeekDetailTypeStatistic_Json() interface{} {
 
 	//检查输入
-	var data WeekTypeStatistic
+	var data WeekStatistic
 	this.CheckGet(&data)
 
 	//检查权限
@@ -117,7 +117,7 @@ func (this *AccountController) GetWeekCardStatistic_Json() interface{} {
 func (this *AccountController) GetWeekDetailCardStatistic_Json() interface{} {
 
 	//检查输入
-	var data WeekCardStatistic
+	var data WeekStatistic
 	this.CheckGet(&data)
 
 	//检查权限

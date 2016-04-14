@@ -1,19 +1,14 @@
 package account
 
 import (
+	"errors"
+	"fmt"
 	. "github.com/fishedee/language"
 	. "github.com/fishedee/web"
 	. "mymanager/models/card"
 	. "mymanager/models/category"
 	. "mymanager/models/common"
-	// "crypto/sha1"
-	"fmt"
-	"strconv"
 	"time"
-	// "io"
-	"errors"
-	// "math"
-	// . "github.com/liudng/godump"
 )
 
 type AccountAoModel struct {
@@ -61,46 +56,39 @@ func (this *AccountAoModel) Del(userId, accountId int) {
 	this.AccountDb.Del(accountId)
 }
 
-func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic {
+func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekStatistic {
 	var where Account
 	var limit CommonPage
 	accountSearchData := this.Search(userId, where, limit)
-	enums := accountEnum.Datas()
+	enums := AccountTypeEnum.Datas()
 
-	// fmt.Println("\naccountSearchData")
-	// fmt.Printf("%+v", accountSearchData)
-
-	yearWeekCardStatistic := QuerySelect(accountSearchData.Data, func(singleData Account) WeekTypeStatistic {
+	//时间转换星期
+	yearWeekCardStatistic := QuerySelect(accountSearchData.Data, func(singleData Account) WeekStatistic {
 		t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
 		if err != nil {
 			panic(err)
 		}
 		year, week := t.ISOWeek()
-		return WeekTypeStatistic{
+		return WeekStatistic{
 			Money: singleData.Money,
 			Type:  singleData.Type,
 			Week:  week,
 			Year:  year,
 		}
-	}).([]WeekTypeStatistic)
+	}).([]WeekStatistic)
 
-	// fmt.Println("\nyearWeekCardStatistic")
+	yearWeekStatistic := QueryGroup(yearWeekCardStatistic, "Year desc,Week desc", func(list []WeekStatistic) []WeekStatistic {
+		//合并单个type下面的多个account
+		result := QueryGroup(list, "Type", func(list []WeekStatistic) []WeekStatistic {
+			sum := QuerySum(QueryColumn(list, "Money"))
+			list[0].Money = sum.(int)
+			return []WeekStatistic{list[0]}
+		}).([]WeekStatistic)
 
-	// godump.Dump(yearWeekCardStatistic)
-
-	yearWeekStatistic := QueryGroup(yearWeekCardStatistic, "Year desc,Week desc,Type desc", func(list []WeekTypeStatistic) []WeekTypeStatistic {
-		sum := QuerySum(QueryColumn(list, "Money").([]int))
-		list[0].Money = sum.(int)
-		return []WeekTypeStatistic{list[0]}
-	}).([]WeekTypeStatistic)
-
-	// fmt.Println("\nyearWeekStatistic")
-	// godump.Dump(yearWeekStatistic)
-
-	result := QueryGroup(yearWeekStatistic, "Year desc,Week desc", func(list []WeekTypeStatistic) []WeekTypeStatistic {
+		//left join所有type
 		single := list[0]
-		result := QueryLeftJoin(enums, list, "Id = Type", func(left EnumData, right WeekTypeStatistic) WeekTypeStatistic {
-			return WeekTypeStatistic{
+		result = QueryLeftJoin(enums, result, "Id = Type", func(left EnumData, right WeekStatistic) WeekStatistic {
+			return WeekStatistic{
 				Year: single.Year,
 				Week: single.Week,
 				Name: fmt.Sprintf(
@@ -112,18 +100,18 @@ func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekTypeStatistic
 				TypeName: left.Name,
 				Money:    right.Money,
 			}
-		}).([]WeekTypeStatistic)
-		return result
-	}).([]WeekTypeStatistic)
+		}).([]WeekStatistic)
 
-	// fmt.Println("\nresult")
-	// godump.Dump(result)
+		return result
+	}).([]WeekStatistic)
+
+	//排序
+	result := QuerySort(yearWeekStatistic, "Year desc,Week desc,Type asc").([]WeekStatistic)
 
 	return result
 
 }
-func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekTypeStatistic) []WeekDetailTypeStatistic {
-
+func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekStatistic) []WeekDetailStatistic {
 	//获取那个星期的时间范围
 	t := time.Now()
 	timeLocation := t.Location()
@@ -133,128 +121,86 @@ func (this *AccountAoModel) GetWeekDetailTypeStatistic(userId int, data WeekType
 	layout := "2006-01-02"
 	startTimeString := thisWeekStartTime.Format(layout)
 	endTimeString := thisWeekEndTime.Format(layout)
-	fmt.Println(startTimeString)
-	fmt.Println(endTimeString)
+	timeRangeData := this.AccountDb.GetWeekDetailTypeStatistic(userId, data.Type, startTimeString, endTimeString)
+	categoryData := this.CategoryAo.Search(userId, Category{}, CommonPage{})
 
-	timeRangeData := this.AccountDb.AccountJoinCategory(userId, data.Type, startTimeString, endTimeString)
-	// Dump(timeRangeData)
-
-	//总价格
-	var totalPrice int
-
-	result := QueryGroup(timeRangeData, "CategoryId desc", func(list []WeekDetailTypeStatistic) []WeekDetailTypeStatistic {
-		sum := QuerySum(QueryColumn(list, "Money").([]int))
-
-		totalPrice += sum.(int)
-
+	//合并category下的account
+	result := QueryGroup(timeRangeData, "CategoryId desc", func(list []Account) []Account {
+		sum := QuerySum(QueryColumn(list, "Money"))
 		list[0].Money = sum.(int)
-		return []WeekDetailTypeStatistic{list[0]}
-	}).([]WeekDetailTypeStatistic)
+		return []Account{list[0]}
+	}).([]Account)
 
-	totalPriceFloat, err := strconv.ParseFloat(strconv.Itoa(totalPrice), 32)
-	if err != nil {
-		panic(err)
-	}
-
-	result = QuerySelect(result, func(singleData WeekDetailTypeStatistic) WeekDetailTypeStatistic {
-
-		categoryMoneyFloat, err := strconv.ParseFloat(strconv.Itoa(singleData.Money), 32)
-
+	//计算比例
+	totalPriceFloat := (float64)(QuerySum(QueryColumn(result, "Money")).(int))
+	resultStatistic := QueryLeftJoin(result, categoryData.Data, "CategoryId = CategoryId", func(left Account, right Category) WeekDetailStatistic {
+		categoryMoneyFloat := (float64)(left.Money)
 		categoryMoneyScale := categoryMoneyFloat / totalPriceFloat * 100
-
 		categoryMoneyScaleString := fmt.Sprintf("%.2f", categoryMoneyScale)
-
-		if err != nil {
-			panic(err)
+		return WeekDetailStatistic{
+			CategoryId:   left.CategoryId,
+			CategoryName: right.Name,
+			Precent:      categoryMoneyScaleString,
+			Money:        left.Money,
 		}
+	}).([]WeekDetailStatistic)
 
-		singleData.Precent = categoryMoneyScaleString
-		return singleData
-	}).([]WeekDetailTypeStatistic)
-
-	return result
+	return resultStatistic
 
 }
 
-func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekCardStatistic {
-	accountJoinCard := this.AccountDb.GetWeekCardStatistic(userId)
-	// fmt.Printf("%+v", accountJoinCard)
+func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekStatistic {
+	accountSearchData := this.Search(userId, Account{}, CommonPage{})
 
-	yearWeekCardStatistic := QuerySelect(accountJoinCard, func(singleData WeekCardStatistic) WeekCardStatistic {
+	//时间转换星期
+	yearWeekCardStatistic := QuerySelect(accountSearchData.Data, func(singleData Account) WeekStatistic {
 		t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
 		if err != nil {
 			panic(err)
 		}
 		year, week := t.ISOWeek()
-		return WeekCardStatistic{
-			CardId:       singleData.CardId,
-			CardName:     singleData.CardName,
-			CardMoney:    singleData.CardMoney,
-			AccountMoney: singleData.AccountMoney,
-			Type:         singleData.Type,
-			Week:         week,
-			Year:         year,
+		return WeekStatistic{
+			Money:  singleData.Money,
+			Type:   singleData.Type,
+			CardId: singleData.CardId,
+			Week:   week,
+			Year:   year,
 		}
-	}).([]WeekCardStatistic)
+	}).([]WeekStatistic)
 
-	yearWeekCardStatistic = QueryGroup(yearWeekCardStatistic, "Year desc,Week desc,CardId desc", func(list []WeekCardStatistic) []WeekCardStatistic {
-
-		// Dump(list)
-
-		var cardTotalPice int
-
-		listLanght := len(list)
-
-		for i := 0; i < listLanght; i++ {
-			switch list[i].Type {
-			case accountEnum.INCOME, accountEnum.TRANSFER_INCOME, accountEnum.ACCOUNT_RECEIVABLE:
-				cardTotalPice += list[i].AccountMoney
-			case accountEnum.SPENDING, accountEnum.TRANSFER_SPENDING, accountEnum.ACCOUNTS_PAYABLE:
-				cardTotalPice -= list[i].AccountMoney
-			default:
-				panic(errors.New("不存在该类型"))
-			}
-		}
-
-		list[0].Money = cardTotalPice
-
-		// Dump([]WeekCardStatistic{list[0]})
-		return []WeekCardStatistic{list[0]}
-
-	}).([]WeekCardStatistic)
-
-	// Dump(yearWeekCardStatistic)
-
-	var where Card
-	var limit CommonPage
-	cardSearch := this.CardAo.Search(userId, where, limit)
-	cardData := cardSearch.Data
-
+	//取出各个card的初始money
+	cardSearch := this.CardAo.Search(userId, Card{}, CommonPage{})
 	initMoney := map[int]int{}
-
-	cardDataLanght := len(cardData)
-	for i := 0; i < cardDataLanght; i++ {
-		initMoney[cardData[i].CardId] = cardData[i].Money
+	for _, singleCard := range cardSearch.Data {
+		initMoney[singleCard.CardId] = singleCard.Money
 	}
-	// fmt.Printf("%+v", initMoney)
 
-	// Dump(yearWeekCardStatistic)
+	this.Log.Debug("%#v", yearWeekCardStatistic)
 
-	result := QueryGroup(yearWeekCardStatistic, "Year asc,Week asc", func(list []WeekCardStatistic) []WeekCardStatistic {
+	yearWeekCardStatistic = QueryGroup(yearWeekCardStatistic, "Year asc,Week asc", func(list []WeekStatistic) []WeekStatistic {
+		//合并单个card下面的多个account
+		result := QueryGroup(list, "CardId", func(list []WeekStatistic) []WeekStatistic {
+			cardTotalPice := QuerySum(QuerySelect(list, func(single WeekStatistic) int {
+				switch single.Type {
+				case AccountTypeEnum.INCOME, AccountTypeEnum.TRANSFER_INCOME, AccountTypeEnum.ACCOUNT_RECEIVABLE:
+					return single.Money
+				case AccountTypeEnum.SPENDING, AccountTypeEnum.TRANSFER_SPENDING, AccountTypeEnum.ACCOUNTS_PAYABLE:
+					return -single.Money
+				default:
+					panic(errors.New("不存在该类型"))
+				}
+			})).(int)
+			list[0].Money = cardTotalPice
+			return []WeekStatistic{list[0]}
+		}).([]WeekStatistic)
 
+		this.Log.Debug("%#v", result)
+
+		//left join所有card
 		single := list[0]
-		// fmt.Println("list")
-		// Dump(list)
-
-		result := QueryLeftJoin(cardData, list, "CardId = CardId", func(left Card, right WeekCardStatistic) WeekCardStatistic {
-			// fmt.Println("left", "right")
-			// Dump(initMoney[left.CardId])
-			// Dump(right)
-
+		result = QueryLeftJoin(cardSearch.Data, result, "CardId = CardId", func(left Card, right WeekStatistic) WeekStatistic {
 			initMoney[left.CardId] = initMoney[left.CardId] + right.Money
-			// initMoney[left.CardId] += right.AccountMoney
-
-			return WeekCardStatistic{
+			return WeekStatistic{
 				Year: single.Year,
 				Week: single.Week,
 				Name: fmt.Sprintf(
@@ -266,85 +212,58 @@ func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekCardStatistic
 				CardId:   left.CardId,
 				CardName: left.Name,
 			}
+		}).([]WeekStatistic)
 
-		}).([]WeekCardStatistic)
-		// Dump(result)
 		return result
-	}).([]WeekCardStatistic)
+	}).([]WeekStatistic)
 
-	result = QueryGroup(result, "Year desc,Week desc", func(list []WeekCardStatistic) []WeekCardStatistic {
-		return list
-	}).([]WeekCardStatistic)
+	//排序
+	result := QuerySort(yearWeekCardStatistic, "Year desc,Week desc,CardId asc").([]WeekStatistic)
 
 	return result
 
 }
 
-func (this *AccountAoModel) GetWeekDetailCardStatistic(userId int, data WeekCardStatistic) []WeekDetailTypeStatistic {
-
-	accountEnumNames := accountEnum.Names()
-
-	// fmt.Printf("%+v", accountEnumDatas)
-
+func (this *AccountAoModel) GetWeekDetailCardStatistic(userId int, data WeekStatistic) []WeekDetailStatistic {
 	//获取那个星期的时间范围
 	t := time.Now()
 	timeLocation := t.Location()
 	thisWeekStartTime := firstDayOfISOWeek(data.Year, data.Week, timeLocation)
 	thisWeekEndTime := thisWeekStartTime.AddDate(0, 0, 7)
 
-	// startMouth := string(thisWeekStartTime.Month())
 	layout := "2006-01-02"
 	startTimeString := thisWeekStartTime.Format(layout)
 	endTimeString := thisWeekEndTime.Format(layout)
-	fmt.Println(startTimeString)
-	fmt.Println(endTimeString)
-
 	timeRangeData := this.AccountDb.GetWeekDetailCardStatistic(userId, data.CardId, startTimeString, endTimeString)
+	enums := AccountTypeEnum.Datas()
 
-	// fmt.Printf("%+v", timeRangeData)
-	// Dump(timeRangeData)
-
-	// //总价格
-	var totalPrice int
-
-	result := QueryGroup(timeRangeData, "Type asc", func(list []WeekDetailTypeStatistic) []WeekDetailTypeStatistic {
-		sum := QuerySum(QueryColumn(list, "Money").([]int))
-
-		totalPrice += sum.(int)
-
+	//合并type下的account
+	result := QueryGroup(timeRangeData, "Type asc", func(list []Account) []Account {
+		sum := QuerySum(QueryColumn(list, "Money"))
 		list[0].Money = sum.(int)
-		return []WeekDetailTypeStatistic{list[0]}
-	}).([]WeekDetailTypeStatistic)
+		return []Account{list[0]}
+	}).([]Account)
 
-	totalPriceFloat, err := strconv.ParseFloat(strconv.Itoa(totalPrice), 32)
-	if err != nil {
-		panic(err)
-	}
-
-	result = QuerySelect(result, func(singleData WeekDetailTypeStatistic) WeekDetailTypeStatistic {
-
-		categoryMoneyFloat, err := strconv.ParseFloat(strconv.Itoa(singleData.Money), 32)
-
+	//计算比例
+	totalPriceFloat := (float64)(QuerySum(QueryColumn(result, "Money")).(int))
+	resultStatistic := QueryLeftJoin(result, enums, "Type = Id", func(left Account, right EnumData) WeekDetailStatistic {
+		categoryMoneyFloat := (float64)(left.Money)
 		categoryMoneyScale := categoryMoneyFloat / totalPriceFloat * 100
-
 		categoryMoneyScaleString := fmt.Sprintf("%.2f", categoryMoneyScale)
-
-		if err != nil {
-			panic(err)
+		return WeekDetailStatistic{
+			Type:     left.Type,
+			TypeName: right.Name,
+			Precent:  categoryMoneyScaleString,
+			Money:    left.Money,
 		}
+	}).([]WeekDetailStatistic)
 
-		singleData.TypeName = accountEnumNames[strconv.Itoa(singleData.Type)]
-		singleData.Precent = categoryMoneyScaleString
-		return singleData
-	}).([]WeekDetailTypeStatistic)
-
-	return result
+	return resultStatistic
 
 }
 
 func (this *AccountAoModel) whenCategoryDel(categoryId int) {
 	this.AccountDb.updateCategoryIdByZero(categoryId)
-
 }
 
 func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {

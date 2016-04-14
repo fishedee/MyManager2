@@ -117,46 +117,22 @@ func (this *AccountDbModel) Del(accountId int) {
 	}
 }
 
-func (this *AccountDbModel) AccountJoinCategory(userId int, thisType int, startTime string, endTime string) []WeekDetailTypeStatistic {
-	var data []WeekDetailTypeStatistic
-	// err := this.DB.Sql("select * from t_account where userId=? AND type=? AND createTime>=? AND createTime<=?;", userId, thisType, startTime, endTime).Find(&data)
-	err := this.DB.Sql("select ca.categoryId,ca.name as categoryName,ac.money,ac.createTime from t_account as ac inner join t_category as ca ON ac.categoryId=ca.categoryId where ac.userId=? AND ac.type=? AND ac.createTime>=? AND ac.createTime<=?", userId, thisType, startTime, endTime).Find(&data)
+func (this *AccountDbModel) GetWeekDetailTypeStatistic(userId int, accountType int, startTime string, endTime string) []Account {
+	var data []Account
+	err := this.DB.Sql("select * from t_account where userId=? AND type=? AND createTime>=? AND createTime<=?", userId, accountType, startTime, endTime).Find(&data)
 
 	if err != nil {
 		panic(err)
 	}
-
-	if len(data) == 0 {
-		Throw(1, "你所寻找的资料不存在")
-	}
-
 	return data
 }
 
-func (this *AccountDbModel) GetWeekCardStatistic(userId int) []WeekCardStatistic {
-	var data []WeekCardStatistic
-	err := this.DB.Sql("select ac.cardId,card.name as cardName,card.money as cardMoney, ac.money as accountMoney,ac.name,ac.type,ac.CreateTime,ac.type from t_account as ac inner join t_card card  on ac.cardId=card.cardId where ac.userId=?", userId).Find(&data)
-
-	if err != nil {
-		panic(err)
-	}
-
-	if len(data) == 0 {
-		Throw(1, "你所寻找的资料不存在")
-	}
-	return data
-}
-
-func (this *AccountDbModel) GetWeekDetailCardStatistic(userId int, cardId int, startTime string, endTime string) []WeekDetailTypeStatistic {
-	var data []WeekDetailTypeStatistic
+func (this *AccountDbModel) GetWeekDetailCardStatistic(userId int, cardId int, startTime string, endTime string) []Account {
+	var data []Account
 	err := this.DB.Sql("select * from t_account where userId=? AND cardId=? AND createTime>=? AND createTime<=?", userId, cardId, startTime, endTime).Find(&data)
 
 	if err != nil {
 		panic(err)
-	}
-
-	if len(data) == 0 {
-		Throw(1, "你所寻找的资料不存在")
 	}
 	return data
 }
