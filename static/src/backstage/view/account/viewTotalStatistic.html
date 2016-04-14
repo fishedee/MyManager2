@@ -45,7 +45,7 @@
 			total.typeName = '合计挣钱';
 			total.money = 0;
 			for( var i in statistic ){
-				if( statistic[i].type == 1 || statistic[i].type == 3 )
+				if( statistic[i].type == 1 || statistic[i].type == 3 || statistic[i].type == 6 )
 					total.money = total.money + parseInt(statistic[i].money);
 				else
 					total.money = total.money - parseInt(statistic[i].money);

@@ -1,8 +1,7 @@
 package account
 
 import (
-	// "fmt"
-	"errors"
+	"fmt"
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 	"strconv"
@@ -101,6 +100,16 @@ func (this *AccountDbModel) Mod(account Account) {
 	}
 }
 
+func (this *AccountDbModel) updateCategoryIdByZero(categoryId int) {
+	var account Account
+	fmt.Println(categoryId)
+	fmt.Println("update")
+	_, err := this.DB.Where("categoryId = ?", categoryId).Cols("categoryId").Update(&account)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func (this *AccountDbModel) Del(accountId int) {
 	_, err := this.DB.Where("accountId = ?", accountId).Delete(&Account{})
 	if err != nil {
@@ -118,7 +127,7 @@ func (this *AccountDbModel) AccountJoinCategory(userId int, thisType int, startT
 	}
 
 	if len(data) == 0 {
-		panic(errors.New("你所寻找的资料不存在"))
+		Throw(1, "你所寻找的资料不存在")
 	}
 
 	return data
@@ -133,7 +142,7 @@ func (this *AccountDbModel) GetWeekCardStatistic(userId int) []WeekCardStatistic
 	}
 
 	if len(data) == 0 {
-		panic(errors.New("你所寻找的资料不存在"))
+		Throw(1, "你所寻找的资料不存在")
 	}
 	return data
 }
@@ -147,7 +156,7 @@ func (this *AccountDbModel) GetWeekDetailCardStatistic(userId int, cardId int, s
 	}
 
 	if len(data) == 0 {
-		panic(errors.New("你所寻找的资料不存在"))
+		Throw(1, "你所寻找的资料不存在")
 	}
 	return data
 }

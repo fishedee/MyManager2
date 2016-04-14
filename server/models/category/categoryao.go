@@ -62,5 +62,5 @@ func (this *CategoryAoModel) Del(userId, categoryId int) {
 	this.Get(userId, categoryId)
 
 	this.CategoryDb.Del(categoryId)
-	this.Queue.Publish("/category/_del", categoryId, categoryId+1)
+	this.Queue.Publish("/category/_del", categoryId)
 }
