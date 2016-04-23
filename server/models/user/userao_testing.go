@@ -142,20 +142,14 @@ func (this *UserAoTest) testDel(userEdward User) {
 func (this *UserAoTest) TestBasic() {
 	this.InitEmpty()
 
-	var userFish *User
-	var userEdward *User
+	userFish := User{}
+	userEdward := User{}
 
-	fishUser := User{}
-	edwardUser := User{}
-
-	userFish = &fishUser
-	userEdward = &edwardUser
-
-	this.testAdd(userFish, userEdward)
-	this.testSearch(*userFish, *userEdward)
-	this.testmod(userEdward)
-	this.testPassword(*userEdward)
-	this.testDel(*userEdward)
+	this.testAdd(&userFish, &userEdward)
+	this.testSearch(userFish, userEdward)
+	this.testmod(&userEdward)
+	this.testPassword(userEdward)
+	this.testDel(userEdward)
 
 }
 
