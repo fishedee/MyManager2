@@ -1,7 +1,6 @@
 package account
 
 import (
-	"fmt"
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 	"strconv"
@@ -104,9 +103,15 @@ func (this *AccountDbModel) Mod(account Account) {
 
 func (this *AccountDbModel) updateCategoryIdByZero(categoryId int) {
 	var account Account
-	fmt.Println(categoryId)
-	fmt.Println("update")
 	_, err := this.DB.Where("categoryId = ?", categoryId).Cols("categoryId").Update(&account)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (this *AccountDbModel) updateCardIdByZero(cardId int) {
+	var account Account
+	_, err := this.DB.Where("cardId = ?", cardId).Cols("cardId").Update(&account)
 	if err != nil {
 		panic(err)
 	}

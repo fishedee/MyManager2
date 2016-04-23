@@ -267,7 +267,7 @@ func (this *AccountAoModel) whenCategoryDel(categoryId int) {
 }
 
 func (this *AccountAoModel) updateCardIdByZero(cardId int) {
-	fmt.Println(cardId)
+	this.AccountDb.updateCardIdByZero(cardId)
 }
 
 func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {
