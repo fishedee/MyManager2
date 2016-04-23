@@ -46,4 +46,7 @@ func (this *CardAoModel) Del(userId, cardId int) {
 	this.Get(userId, cardId)
 
 	this.CardDb.Del(cardId)
+
+	this.Queue.Publish(CardQueueEnum.EVENT_DEL, cardId)
+
 }

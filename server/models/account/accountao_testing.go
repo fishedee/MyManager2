@@ -2,6 +2,7 @@ package account
 
 import (
 	// "fmt"
+
 	. "github.com/fishedee/language"
 	. "mymanager/models/card"
 	. "mymanager/models/category"
@@ -16,6 +17,7 @@ type AccountAoTest struct {
 	UserAoTest     UserAoTest
 	CategoryAoTest CategoryAoTest
 	CardAoTest     CardAoTest
+	CategoryAo     CategoryAoModel
 }
 
 func (this *AccountAoTest) InitEmpty() {
@@ -40,7 +42,7 @@ func (this *AccountAoTest) AccountAddSelfId() int {
 	return AddSelfId
 }
 
-func (this *AccountAoTest) add() (map[int]Account, []Account) {
+func (this *AccountAoTest) testAdd() (map[int]Account, []Account) {
 
 	nowTime := time.Now().Truncate(time.Second)
 	oldTime := time.Now().AddDate(0, -1, 0).Truncate(time.Second)
@@ -306,7 +308,7 @@ func (this *AccountAoTest) testSearch(accountAddDataMap map[int]Account, account
 }
 
 func (this *AccountAoTest) testMod(accountAddDataMap map[int]Account) {
-	//修改卡片
+	//修改账务
 	modAccountData := accountAddDataMap[10001]
 	modAccountData.Name = "小肥牛自助餐"
 	modAccountData.Money = 88
@@ -316,7 +318,7 @@ func (this *AccountAoTest) testMod(accountAddDataMap map[int]Account) {
 	this.AssertEqual(accountData2, modAccountData)
 	accountAddDataMap[10001] = modAccountData
 
-	//修改不属于他的卡片
+	//修改不属于他的账务
 	err4 := this.AccountAo.Mod_WithError(10002, Account{
 		AccountId:  10001,
 		UserId:     10002,
@@ -329,7 +331,7 @@ func (this *AccountAoTest) testMod(accountAddDataMap map[int]Account) {
 	})
 	this.AssertError(err4, 1, "你没有权利查看或编辑等操作")
 
-	//修改不存在的卡片
+	//修改不存在的账务
 	err5 := this.AccountAo.Mod_WithError(10001, Account{
 		AccountId:  99999,
 		UserId:     10002,
@@ -343,8 +345,7 @@ func (this *AccountAoTest) testMod(accountAddDataMap map[int]Account) {
 	this.AssertError(err5, 1, "该99999账务不存在")
 }
 
-func (this *AccountAoTest) testStatistics() {
-
+func (this *AccountAoTest) testGetWeekTypeStatistic() []WeekStatistic {
 	getWeekTypeStatistic := this.AccountAo.GetWeekTypeStatistic(10001)
 
 	// fmt.Println("\n________________________________")
@@ -364,7 +365,9 @@ func (this *AccountAoTest) testStatistics() {
 		WeekStatistic{CardId: 0, CardName: "", Money: 616, Name: "2016年12周", Type: 5, TypeName: "借还账收入", Week: 12, Year: 2016, CreateTime: "", ModifyTime: ""},
 		WeekStatistic{CardId: 0, CardName: "", Money: 363, Name: "2016年12周", Type: 6, TypeName: "借还账支出", Week: 12, Year: 2016, CreateTime: "", ModifyTime: ""},
 	})
-
+	return getWeekTypeStatistic
+}
+func (this *AccountAoTest) testGetWeekDetailTypeStatistic(getWeekTypeStatistic []WeekStatistic) {
 	getWeekDetailTypeStatistic := this.AccountAo.GetWeekDetailTypeStatistic(10001, WeekStatistic{
 		Year: getWeekTypeStatistic[0].Year,
 		Week: getWeekTypeStatistic[0].Week,
@@ -380,6 +383,8 @@ func (this *AccountAoTest) testStatistics() {
 		WeekDetailStatistic{CategoryId: 10001, CategoryName: "生活用品", Type: 0, TypeName: "", Money: 3000, Precent: "68.81"},
 	})
 
+}
+func (this *AccountAoTest) testGetWeekCardStatistic() []WeekStatistic {
 	getWeekCardStatistic := this.AccountAo.GetWeekCardStatistic(10001)
 
 	// fmt.Println("\n________________________________")
@@ -392,12 +397,16 @@ func (this *AccountAoTest) testStatistics() {
 		WeekStatistic{CardId: 10003, CardName: "信用卡", Money: 99, Name: "2016年12周", Type: 0, TypeName: "", Week: 12, Year: 2016, CreateTime: "", ModifyTime: ""},
 	})
 
+	return getWeekCardStatistic
+
+}
+func (this *AccountAoTest) testGetWeekDetailCardStatistic(getWeekCardStatistic []WeekStatistic) {
+
 	getWeekDetailCardStatistic := this.AccountAo.GetWeekDetailCardStatistic(10001, WeekStatistic{
 		Year:   getWeekCardStatistic[0].Year,
 		Week:   getWeekCardStatistic[0].Week,
 		CardId: getWeekCardStatistic[0].CardId,
 	})
-
 	// fmt.Println("\n________________________________")
 	// fmt.Printf("%#v", getWeekDetailCardStatistic)
 
@@ -412,18 +421,33 @@ func (this *AccountAoTest) testStatistics() {
 }
 
 func (this *AccountAoTest) testDel() {
-	//删除不属于他的卡片
+	//删除不属于他的账务
 	err6 := this.AccountAo.Del_WithError(10002, 10001)
 	this.AssertError(err6, 1, "你没有权利查看或编辑等操作")
 
-	//删除不存在的卡片
+	//删除不存在的账务
 	err7 := this.AccountAo.Del_WithError(10001, 77777777)
 	this.AssertError(err7, 1, "该77777777账务不存在")
 
-	//删除卡片
+	//删除category类型，账务上的category为0
+	this.CategoryAo.Del(10001, 10001)
+	_, err := this.CategoryAo.Get_WithError(10001, 10001)
+	this.AssertError(err, 1, "该10001类型不存在")
+	accountData := this.AccountAo.Get(10001, 10001)
+	this.AssertEqual(accountData.CategoryId, 0)
+
+	//删除账务
 	this.AccountAo.Del(10001, 10001)
 	_, err8 := this.AccountAo.Get_WithError(10001, 10001)
 	this.AssertError(err8, 1, "该10001账务不存在")
+
+}
+func (this *AccountAoTest) testStatistics() {
+	getWeekTypeStatistic := this.testGetWeekTypeStatistic()
+	this.testGetWeekDetailTypeStatistic(getWeekTypeStatistic)
+
+	getWeekCardStatistic := this.testGetWeekCardStatistic()
+	this.testGetWeekDetailCardStatistic(getWeekCardStatistic)
 }
 
 func (this *AccountAoTest) TestBasic() {
@@ -432,7 +456,7 @@ func (this *AccountAoTest) TestBasic() {
 	this.CardAoTest.InitSample()
 	this.InitEmpty()
 
-	accountAddDataMap, accountAddData := this.add()
+	accountAddDataMap, accountAddData := this.testAdd()
 	this.testSearch(accountAddDataMap, accountAddData)
 	this.testMod(accountAddDataMap)
 	this.testStatistics()

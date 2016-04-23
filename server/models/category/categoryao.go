@@ -48,5 +48,5 @@ func (this *CategoryAoModel) Del(userId, categoryId int) {
 	this.Get(userId, categoryId)
 
 	this.CategoryDb.Del(categoryId)
-	this.Queue.Publish("/category/_del", categoryId)
+	this.Queue.Publish(CategoryQueueEnum.EVENT_DEL, categoryId)
 }

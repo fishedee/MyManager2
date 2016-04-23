@@ -266,6 +266,10 @@ func (this *AccountAoModel) whenCategoryDel(categoryId int) {
 	this.AccountDb.updateCategoryIdByZero(categoryId)
 }
 
+func (this *AccountAoModel) updateCardIdByZero(cardId int) {
+	fmt.Println(cardId)
+}
+
 func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {
 	date := time.Date(year, 0, 0, 0, 0, 0, 0, timezone)
 	isoYear, isoWeek := date.ISOWeek()
@@ -293,6 +297,7 @@ func firstDayOfISOWeek(year int, week int, timezone *time.Location) time.Time {
 
 func init() {
 	InitDaemon(func(this *AccountAoModel) {
-		this.Queue.Subscribe("/category/_del", this.whenCategoryDel)
+		this.Queue.Subscribe(CategoryQueueEnum.EVENT_DEL, this.whenCategoryDel)
+		this.Queue.Subscribe(CardQueueEnum.EVENT_DEL, this.updateCardIdByZero)
 	})
 }
