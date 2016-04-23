@@ -1,6 +1,7 @@
 package card
 
 import (
+	// "fmt"
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 	"strconv"
@@ -60,13 +61,15 @@ func (this *CardDbModel) Get(id int) Card {
 	}
 
 	if len(card) == 0 {
-		Throw(1, "该"+strconv.Itoa(card[0].CardId)+"银行卡不存在")
+		Throw(1, "该"+strconv.Itoa(id)+"银行卡不存在")
 	}
 
 	return card[0]
 }
 
 func (this *CardDbModel) Add(cards Card) int {
+	// fmt.Println("----------------------")
+	// fmt.Println(cards)
 	_, err := this.DB.Insert(&cards)
 	if err != nil {
 		panic(err)

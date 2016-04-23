@@ -25,7 +25,7 @@ func (this *UserAoModel) GetByName(username string) []User {
 	return this.UserDb.GetByName(username)
 }
 
-func (this *UserAoModel) Add(user User) {
+func (this *UserAoModel) Add(user User) int {
 	//检查是否有重名
 	userInfo := this.UserDb.GetByName(user.Name)
 	if len(userInfo) != 0 {
@@ -34,7 +34,7 @@ func (this *UserAoModel) Add(user User) {
 
 	//添加用户
 	user.Password = this.getPasswordHash(user.Password)
-	this.UserDb.Add(user)
+	return this.UserDb.Add(user)
 }
 
 func (this *UserAoModel) ModType(userId int, userType int) {
@@ -43,6 +43,7 @@ func (this *UserAoModel) ModType(userId int, userType int) {
 		Type: userType,
 	}
 	this.UserDb.Mod(userId, user)
+
 }
 func (this *UserAoModel) ModPassword(userId int, password string) {
 

@@ -92,6 +92,7 @@ func (this *UserDbModel) Mod(id int, user User) {
 	if err != nil {
 		panic(err)
 	}
+
 }
 
 func (this *UserDbModel) Del(id int) {

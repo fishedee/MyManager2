@@ -64,11 +64,11 @@ func (this *AccountAoModel) GetWeekTypeStatistic(userId int) []WeekStatistic {
 
 	//时间转换星期
 	yearWeekCardStatistic := QuerySelect(accountSearchData.Data, func(singleData Account) WeekStatistic {
-		t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
-		if err != nil {
-			panic(err)
-		}
-		year, week := t.ISOWeek()
+		// t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		year, week := singleData.CreateTime.ISOWeek()
 		return WeekStatistic{
 			Money: singleData.Money,
 			Type:  singleData.Type,
@@ -154,11 +154,11 @@ func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekStatistic {
 
 	//时间转换星期
 	yearWeekCardStatistic := QuerySelect(accountSearchData.Data, func(singleData Account) WeekStatistic {
-		t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
-		if err != nil {
-			panic(err)
-		}
-		year, week := t.ISOWeek()
+		// t, err := time.Parse("2006-01-02 15:05:04", singleData.CreateTime)
+		// if err != nil {
+		// 	panic(err)
+		// }
+		year, week := singleData.CreateTime.ISOWeek()
 		return WeekStatistic{
 			Money:  singleData.Money,
 			Type:   singleData.Type,
@@ -175,7 +175,7 @@ func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekStatistic {
 		initMoney[singleCard.CardId] = singleCard.Money
 	}
 
-	this.Log.Debug("%#v", yearWeekCardStatistic)
+	// this.Log.Debug("%#v", yearWeekCardStatistic)
 
 	yearWeekCardStatistic = QueryGroup(yearWeekCardStatistic, "Year asc,Week asc", func(list []WeekStatistic) []WeekStatistic {
 		//合并单个card下面的多个account
@@ -194,7 +194,7 @@ func (this *AccountAoModel) GetWeekCardStatistic(userId int) []WeekStatistic {
 			return []WeekStatistic{list[0]}
 		}).([]WeekStatistic)
 
-		this.Log.Debug("%#v", result)
+		// this.Log.Debug("%#v", result)
 
 		//left join所有card
 		single := list[0]

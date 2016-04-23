@@ -60,7 +60,7 @@ func (this *CategoryDbModel) Get(id int) Category {
 	}
 
 	if len(category) == 0 {
-		Throw(1, "该"+strconv.Itoa(category[0].CategoryId)+"类型不存在")
+		Throw(1, "该"+strconv.Itoa(id)+"类型不存在")
 	}
 
 	return category[0]

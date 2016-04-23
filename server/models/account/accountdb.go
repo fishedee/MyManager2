@@ -78,13 +78,15 @@ func (this *AccountDbModel) Get(id int) Account {
 	}
 
 	if len(account) == 0 {
-		Throw(1, "该"+strconv.Itoa(account[0].AccountId)+"类型不存在")
+		Throw(1, "该"+strconv.Itoa(id)+"账务不存在")
 	}
 
 	return account[0]
 }
 
 func (this *AccountDbModel) Add(accounts Account) int {
+	// fmt.Println("------------------------------------")
+	// fmt.Println(accounts)
 	_, err := this.DB.Insert(&accounts)
 	if err != nil {
 		panic(err)

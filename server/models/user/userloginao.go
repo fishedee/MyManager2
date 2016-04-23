@@ -1,7 +1,7 @@
 package user
 
 import (
-	"fmt"
+	// "fmt"
 	. "github.com/fishedee/language"
 	. "mymanager/models/common"
 )
@@ -50,7 +50,7 @@ func (this *UserLoginAoModel) Logout() {
 		panic("session启动失败")
 	}
 	defer sess.SessionRelease(this.Ctx.ResponseWriter)
-	fmt.Println(6666666666)
+	// fmt.Println(6666666666)
 	sess.Set("userId", 0)
 }
 

@@ -9,6 +9,8 @@ release:
 	cp ${GOPATH}/bin/mymanager .
 	sudo supervisorctl restart mymanager_server
 	sudo tail -f ../data/log/access.log
+gen:
+	go generate
 stop:
 	sudo supervisorctl stop mymanager_server 
 	-pkill -9 bee

@@ -15,15 +15,7 @@ type CategoryAoModel struct {
 
 func (this *CategoryAoModel) Search(userId int, where Category, pageInfo CommonPage) Categorys {
 
-	// wheres := Category{
-	// 	UserId: userId,
-	// 	Name:   data.Name,
-	// 	Remark: data.Remark,
-	// }
-
 	where.UserId = userId
-
-	// fmt.Printf("%+v", wheres)
 
 	return this.CategoryDb.Search(where, pageInfo)
 
@@ -38,12 +30,6 @@ func (this *CategoryAoModel) Get(userId, categoryId int) Category {
 }
 
 func (this *CategoryAoModel) Add(userId int, category Category) {
-
-	// categorys := Category{
-	// 	UserId: userId,
-	// 	Name:   category.Name,
-	// 	Remark: category.Remark,
-	// }
 
 	category.UserId = userId
 	this.CategoryDb.Add(category)

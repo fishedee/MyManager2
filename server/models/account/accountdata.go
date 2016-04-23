@@ -1,5 +1,9 @@
 package account
 
+import (
+	"time"
+)
+
 type Account struct {
 	AccountId  int `xorm:"autoincr"`
 	UserId     int
@@ -9,8 +13,8 @@ type Account struct {
 	CategoryId int
 	CardId     int
 	Type       int
-	CreateTime string `xorm:"created"`
-	ModifyTime string `xorm:"updated"`
+	CreateTime time.Time `xorm:"created"`
+	ModifyTime time.Time `xorm:"updated"`
 }
 
 type Accounts struct {
